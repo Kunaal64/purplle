@@ -48,14 +48,13 @@ function App() {
     try {
       const storeParam = storeId !== 'ALL' ? `store_id=${storeId}` : '';
       const dateParam = date ? `date=${date}` : '';
-      const params = [storeParam, dateParam].filter(Boolean).join('&');
-      const query = params ? `?${params}` : '';
+      const query = dateParam ? `?${dateParam}` : '';
 
       const urls = {
-        metrics: `${API_BASE}/metrics${query}`,
-        funnel: `${API_BASE}/funnel${query}`,
-        anomalies: `${API_BASE}/anomalies${query}`,
-        events: `${API_BASE}/events${query}${query ? '&' : '?'}limit=15`
+        metrics: storeId !== 'ALL' ? `${API_BASE}/stores/${storeId}/metrics${query}` : `${API_BASE}/metrics${query}`,
+        funnel: storeId !== 'ALL' ? `${API_BASE}/stores/${storeId}/funnel${query}` : `${API_BASE}/funnel${query}`,
+        anomalies: storeId !== 'ALL' ? `${API_BASE}/stores/${storeId}/anomalies${query}` : `${API_BASE}/anomalies${query}`,
+        events: storeId !== 'ALL' ? `${API_BASE}/events?store_id=${storeId}${dateParam ? '&'+dateParam : ''}&limit=15` : `${API_BASE}/events${query ? query+'&' : '?'}limit=15`
       };
 
       const latencies = {};
