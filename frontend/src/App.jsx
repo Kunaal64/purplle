@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const API_BASE = window.location.port === '5173' ? 'http://localhost:8000' : '';
+const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8000' : '');
 
 const CAMERAS_LIST = [
   { id: 'CAM_ENTRY_03', name: 'Main Entry Door (CAM 3)', file: 'CAM 3.mp4', zone: 'ENTRY', fps: 30, res: '1080p' },

@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 load_dotenv()
+import os
 import time
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -30,7 +31,8 @@ from datetime import datetime
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-DB_PATH = "store_intelligence.db"
+DB_PATH = os.getenv("DB_PATH", "store_intelligence.db")
+
 
 # ── Database setup ─────────────────────────────────────────────────────────────
 
