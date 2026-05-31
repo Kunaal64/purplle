@@ -1,0 +1,8 @@
+.git
+.venv
+node_modules
+frontend/node_modules
+__pycache__
+.pytest_cache
+output
+store_intelligence.db
