@@ -194,14 +194,15 @@ def correlate_purchases(conn):
 
         match = conn.execute("""
             SELECT visitor_id, timestamp,
-                   ABS(strftime('%s', timestamp) - strftime('%s', ?)) as diff
+                   (strftime('%s', ?) - strftime('%s', timestamp)) as diff
             FROM events
             WHERE event_type = 'ZONE_ENTER'
               AND zone_id IN ('POS_COUNTER', 'BILLING_DESK', 'CHECKOUT')
-              AND ABS(strftime('%s', timestamp) - strftime('%s', ?)) <= 120
+              AND (strftime('%s', ?) - strftime('%s', timestamp)) >= 0
+              AND (strftime('%s', ?) - strftime('%s', timestamp)) <= 300
             ORDER BY diff ASC
             LIMIT 1
-        """, (ts, ts)).fetchone()
+        """, (ts, ts, ts)).fetchone()
 
         if match:
             visitor_id = match["visitor_id"]
