@@ -123,6 +123,78 @@ function App() {
     }
   };
 
+  const makeWaterfallData = () => {
+    if (!funnelData || !funnelData.funnel) return [];
+    const entries = funnelData.funnel.find(e => e.stage === '1_entered') || { visitors: 0, pct_of_entry: 0 };
+    const browsed = funnelData.funnel.find(e => e.stage === '2_browsed') || { visitors: 0, pct_of_entry: 0 };
+    const checkout = funnelData.funnel.find(e => e.stage === '3_at_checkout') || { visitors: 0, pct_of_entry: 0 };
+    const purchased = funnelData.funnel.find(e => e.stage === '4_purchased') || { visitors: 0, pct_of_entry: 0 };
+
+    return [
+      {
+        type: 'stage',
+        name: 'Entered',
+        icon: '🚪',
+        visitors: entries.visitors,
+        pct: entries.pct_of_entry,
+        colorClass: 'bg-indigo-600 shadow-[0_0_15px_rgba(99,102,241,0.25)]',
+      },
+      {
+        type: 'dropoff',
+        name: 'Browse Loss',
+        diff: entries.visitors - browsed.visitors,
+        diffPct: entries.pct_of_entry - browsed.pct_of_entry,
+        bottom: browsed.pct_of_entry,
+        height: entries.pct_of_entry - browsed.pct_of_entry,
+        colorClass: 'bg-rose-500/20 border border-rose-500/40 text-rose-400',
+      },
+      {
+        type: 'stage',
+        name: 'Browsed',
+        icon: '🧴',
+        visitors: browsed.visitors,
+        pct: browsed.pct_of_entry,
+        colorClass: 'bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.2)]',
+      },
+      {
+        type: 'dropoff',
+        name: 'Checkout Loss',
+        diff: browsed.visitors - checkout.visitors,
+        diffPct: browsed.pct_of_entry - checkout.pct_of_entry,
+        bottom: checkout.pct_of_entry,
+        height: browsed.pct_of_entry - checkout.pct_of_entry,
+        colorClass: 'bg-rose-500/20 border border-rose-500/40 text-rose-400',
+      },
+      {
+        type: 'stage',
+        name: 'Checkout',
+        icon: '💳',
+        visitors: checkout.visitors,
+        pct: checkout.pct_of_entry,
+        colorClass: 'bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.15)]',
+      },
+      {
+        type: 'dropoff',
+        name: 'Purchase Loss',
+        diff: checkout.visitors - purchased.visitors,
+        diffPct: checkout.pct_of_entry - purchased.pct_of_entry,
+        bottom: purchased.pct_of_entry,
+        height: checkout.pct_of_entry - purchased.pct_of_entry,
+        colorClass: 'bg-rose-500/20 border border-rose-500/40 text-rose-400',
+      },
+      {
+        type: 'stage',
+        name: 'Purchased',
+        icon: '🛍️',
+        visitors: purchased.visitors,
+        pct: purchased.pct_of_entry,
+        colorClass: 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]',
+      }
+    ];
+  };
+
+  const waterfallData = makeWaterfallData();
+
   return (
     <div className="min-h-screen flex bg-[#0c0e12] text-slate-200 font-sans antialiased">
       {/* Toast Notification */}
@@ -354,38 +426,95 @@ function App() {
                     </div>
                   </section>
 
-                  {/* Funnel Layout */}
+                  {/* Funnel Layout - Stepped Waterfall Chart */}
                   {funnelData && (
                     <section className="bg-[#12151c] border border-slate-800 p-5 rounded-xl">
-                      <h2 className="text-sm font-bold text-white mb-0.5">Shopper Conversion Funnel</h2>
-                      <p className="text-[10px] text-slate-400 mb-6">Unique visitor tracks progression across stores</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+                        <div>
+                          <h2 className="text-sm font-bold text-white mb-0.5">Shopper Conversion Funnel (Waterfall Chart)</h2>
+                          <p className="text-[10px] text-slate-400">Visitor session drops & conversion steps</p>
+                        </div>
+                        <div className="flex gap-3 text-[10px]">
+                          <span className="flex items-center gap-1.5 text-slate-300">
+                            <span className="w-2 h-2 rounded bg-indigo-500"></span> Active Stage
+                          </span>
+                          <span className="flex items-center gap-1.5 text-slate-350">
+                            <span className="w-2 h-2 rounded bg-rose-500/20 border border-rose-500/40"></span> Drop-off Loss
+                          </span>
+                        </div>
+                      </div>
                       
-                      <div className="space-y-3.5">
-                        {funnelData.funnel.map((item) => {
-                          const stages = {
-                            '1_entered': { name: 'Entered Store', icon: '🚪' },
-                            '2_browsed': { name: 'Browsed Aisles', icon: '🧴' },
-                            '3_at_checkout': { name: 'Reached Checkout', icon: '💳' },
-                            '4_purchased': { name: 'Completed Purchase', icon: '🛍️' },
-                            '5_exited': { name: 'Exited Store', icon: '👋' }
-                          };
-                          const stageInfo = stages[item.stage] || { name: item.stage, icon: '📍' };
-                          
-                          return (
-                            <div className="space-y-1" key={item.stage}>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="font-semibold text-slate-200">{stageInfo.name}</span>
-                                <span className="text-slate-400">{item.visitors} sessions ({item.pct_of_entry}%)</span>
-                              </div>
-                              <div className="h-3.5 bg-slate-900 rounded-lg overflow-hidden relative border border-slate-800">
-                                <div 
-                                  className="h-full bg-indigo-600 rounded-lg transition-all duration-500"
-                                  style={{ width: `${item.pct_of_entry}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                      {/* The Waterfall Chart View */}
+                      <div className="h-64 flex items-end justify-between bg-slate-950/40 border border-slate-800/80 rounded-xl p-5 pt-12 pb-6 relative select-none">
+                        {/* Y-axis markers */}
+                        <div className="absolute left-3 top-3 bottom-12 flex flex-col justify-between text-[8px] text-slate-500 font-mono">
+                          <span>100%</span>
+                          <span>75%</span>
+                          <span>50%</span>
+                          <span>25%</span>
+                          <span>0%</span>
+                        </div>
+
+                        <div className="flex-grow flex items-end justify-around h-full ml-8 gap-1">
+                          {waterfallData.map((bar, idx) => {
+                            if (bar.type === 'stage') {
+                              return (
+                                <div key={idx} className="flex flex-col items-center group relative h-full justify-end w-12 md:w-16">
+                                  {/* Tooltip */}
+                                  <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] py-1 px-2 rounded border border-slate-700 shadow-xl z-20 whitespace-nowrap pointer-events-none">
+                                    {bar.name}: <strong>{bar.visitors}</strong> sessions ({bar.pct}%)
+                                  </div>
+                                  
+                                  {/* Value on top of bar */}
+                                  <span className="text-[10px] font-bold text-white mb-1.5">{bar.visitors}</span>
+
+                                  {/* Solid Column */}
+                                  <div 
+                                    className={`w-8 md:w-10 rounded-t transition-all duration-700 ${bar.colorClass}`}
+                                    style={{ height: `${Math.max(4, bar.pct)}%` }}
+                                  ></div>
+
+                                  {/* Bottom Stage Label */}
+                                  <span className="text-[10px] text-slate-400 mt-2 font-medium text-center truncate w-full flex items-center justify-center gap-1">
+                                    <span>{bar.icon}</span>
+                                    <span className="hidden sm:inline">{bar.name}</span>
+                                  </span>
+                                </div>
+                              );
+                            } else {
+                              // Dropoff bar
+                              return (
+                                <div key={idx} className="flex flex-col items-center group relative h-full justify-end w-6 md:w-8">
+                                  {/* Tooltip */}
+                                  <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-rose-300 text-[10px] py-1 px-2 rounded border border-slate-700 shadow-xl z-20 whitespace-nowrap pointer-events-none">
+                                    {bar.name}: <strong>-{bar.diff}</strong> (-{bar.diffPct.toFixed(1)}%)
+                                  </div>
+
+                                  {/* Value floating */}
+                                  {bar.diff > 0 && (
+                                    <span className="text-[9px] font-semibold text-rose-400 mb-1.5" style={{ paddingBottom: `${bar.bottom}%` }}>
+                                      -{bar.diff}
+                                    </span>
+                                  )}
+
+                                  {/* Floating Column */}
+                                  <div 
+                                    className={`w-4 md:w-6 rounded transition-all duration-700 ${bar.colorClass}`}
+                                    style={{ 
+                                      height: `${Math.max(2, bar.height)}%`,
+                                      marginBottom: `${bar.bottom}%`
+                                    }}
+                                  ></div>
+
+                                  {/* Bottom Drop Label */}
+                                  <span className="text-[8px] text-slate-500 mt-2 font-semibold uppercase tracking-wider">
+                                    Loss
+                                  </span>
+                                </div>
+                              );
+                            }
+                          })}
+                        </div>
                       </div>
 
                       <div className="flex gap-4 flex-wrap mt-5 pt-4 border-t border-slate-800 text-[10px] text-slate-400">
@@ -394,6 +523,9 @@ function App() {
                         </div>
                         <div>
                           Browse to Checkout Drop-off: <strong className="text-red-400 font-bold">{funnelData.drop_off.browse_to_checkout}%</strong>
+                        </div>
+                        <div>
+                          Checkout to Purchase Drop-off: <strong className="text-red-400 font-bold">{funnelData.drop_off.checkout_to_purchase}%</strong>
                         </div>
                       </div>
                     </section>

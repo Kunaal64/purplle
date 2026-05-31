@@ -382,6 +382,28 @@ def insert_event(conn, evt: dict) -> bool:
         return False
 
 
+def format_event(row) -> dict:
+    evt = dict(row)
+    evt["is_staff"] = bool(evt.get("is_staff", 0))
+    meta = evt.get("metadata")
+    if isinstance(meta, str):
+        try:
+            evt["metadata"] = json.loads(meta)
+        except Exception:
+            evt["metadata"] = {}
+    elif meta is None:
+        evt["metadata"] = {}
+        
+    # Ensure session_seq is inside metadata as per required schema
+    if isinstance(evt["metadata"], dict) and "session_seq" not in evt["metadata"] and "session_seq" in evt:
+        evt["metadata"]["session_seq"] = evt["session_seq"]
+        
+    # Clean up DB-specific top-level columns
+    evt.pop("ingested_at", None)
+    evt.pop("session_seq", None)
+    return evt
+
+
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -827,7 +849,7 @@ def get_visitor_journey(visitor_id: str):
 
     return {
         "visitor_id": visitor_id,
-        "events":     [dict(r) for r in rows],
+        "events":     [format_event(r) for r in rows],
         "total":      len(rows),
     }
 
@@ -863,7 +885,7 @@ def list_events(
     conn.close()
 
     return {
-        "events": [dict(r) for r in rows],
+        "events": [format_event(r) for r in rows],
         "total":  total["cnt"],
         "limit":  limit,
         "offset": offset,
