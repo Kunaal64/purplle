@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// IF VERCEL ENVIRONMENT VARIABLES ARE FAILING: 
+// Simply replace the line below with your Render URL, like this:
+// const API_BASE = 'https://purplle-backend.onrender.com';
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8000' : '');
 
 const CAMERAS_LIST = [
