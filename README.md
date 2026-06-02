@@ -23,57 +23,81 @@ A computer vision pipeline that converts raw CCTV footage into actionable retail
 
 ---
 
-## Quick Start
+## Instructions to Run
 
-### 1. Install dependencies
+### Local Setup
+
+#### 1. Prerequisites
+- Python 3.10+
+- Git
+- Docker and Docker Compose (optional, for containerized run)
+
+#### 2. Install Dependencies
+Create a virtual environment and install the required packages:
 ```bash
+python -m venv .venv
+# On Windows
+.venv\Scripts\activate
+# On macOS/Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
-### 2. Verify setup
+#### 3. Verify setup
 ```bash
 python -c "from ultralytics import YOLO; m = YOLO('yolov8n.pt'); print('Ready!')"
 ```
 
-### 3. Run detection on each camera
+#### 4. Run the Pipeline
+We provide a convenient script to run the detection pipeline across all videos:
+```bash
+python run_pipeline_all.py
+```
+*Note: Ensure the `CCTV Footage` directory contains the required `.mp4` video files.*
+
+Alternatively, run individual cameras:
 ```bash
 # Entry camera (visitor counting)
-python pipeline/detect.py --video "clips/CAM 3.mp4" --store STORE_PUR_001 --camera CAM_ENTRY_03
+python pipeline/detect.py --video "CCTV Footage/CAM 3.mp4" --store STORE_PUR_001 --camera CAM_ENTRY_03
 
 # Checkout camera (purchase detection)
-python pipeline/detect.py --video "clips/CAM 5.mp4" --store STORE_PUR_001 --camera CAM_CHECKOUT_05
+python pipeline/detect.py --video "CCTV Footage/CAM 5.mp4" --store STORE_PUR_001 --camera CAM_CHECKOUT_05
 
 # Floor cameras (browsing/dwell)
-python pipeline/detect.py --video "clips/CAM 1.mp4" --store STORE_PUR_001 --camera CAM_FLOOR_01
-python pipeline/detect.py --video "clips/CAM 2.mp4" --store STORE_PUR_001 --camera CAM_FLOOR_02
+python pipeline/detect.py --video "CCTV Footage/CAM 1.mp4" --store STORE_PUR_001 --camera CAM_FLOOR_01
+python pipeline/detect.py --video "CCTV Footage/CAM 2.mp4" --store STORE_PUR_001 --camera CAM_FLOOR_02
 
 # Stock room (staff only)
-python pipeline/detect.py --video "clips/CAM 4.mp4" --store STORE_PUR_001 --camera CAM_STOCKROOM_04
+python pipeline/detect.py --video "CCTV Footage/CAM 4.mp4" --store STORE_PUR_001 --camera CAM_STOCKROOM_04
 ```
 
 Add `--preview` to any command to see live detection boxes.
 
-### 4. Start the API
+#### 5. Start the FastAPI Server
+Run the backend server to process events and serve analytics. Open a new terminal window, activate the virtual environment, and run:
 ```bash
 uvicorn api.main:app --reload --port 8000
 ```
 
-### 5. Load events into the API
+#### 6. Ingest Events to the Database
+Once the API is running, open another terminal window, activate the virtual environment, and run the ingestion script to load the generated event logs into the SQLite database:
 ```bash
 python ingest_events.py
 ```
 
-### 6. Check metrics
-Open in browser:
-- http://localhost:8000/metrics
-- http://localhost:8000/funnel
-- http://localhost:8000/anomalies
-- http://localhost:8000/docs  ← interactive API docs
+#### 7. View Analytics
+Access the API endpoints to view the insights in your browser:
+- **Metrics**: http://localhost:8000/metrics
+- **Funnel**: http://localhost:8000/funnel
+- **Anomalies**: http://localhost:8000/anomalies
+- **Swagger UI**: http://localhost:8000/docs (Interactive API documentation)
 
 ---
 
-## Docker (Part C)
+## Docker Deployment (Part C)
 
+To run the entire application stack (API) using Docker:
 ```bash
 # Build and run
 docker-compose up --build
@@ -104,8 +128,9 @@ store-intelligence/
 ├── output/
 │   ├── events/            # Generated .jsonl files
 │   └── retail.db          # SQLite database
-├── clips/                 # CCTV video files (not committed)
+├── CCTV Footage/          # CCTV video files (not committed)
 ├── ingest_events.py       # Load events into API
+├── run_pipeline_all.py    # Run all pipeline scripts
 ├── requirements.txt
 ├── Dockerfile
 └── docker-compose.yml
@@ -142,7 +167,7 @@ store-intelligence/
 - **Claude (Anthropic)** — Architecture design, code generation, debugging
 - **YOLOv8 (Ultralytics)** — Pre-trained person detection model
 - All AI usage documented in CHOICES.md
-- 
+
 ## Known Limitations
 - Visitor IDs are currently tracked independently per camera.
 - Cross-camera re-identification (ReID) is not implemented in this prototype.
@@ -158,3 +183,4 @@ This can be improved by implementing:
 - Cross-camera person re-identification using appearance embeddings
 - Global visitor identity mapping across all cameras
 - Centralized multi-camera tracking pipeline
+
